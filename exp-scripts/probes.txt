@@ -1,0 +1,7 @@
+human
+animal
+face
+plant
+vegetable
+tool
+man-made object
