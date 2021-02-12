@@ -1,7 +1,8 @@
 human
 animal
+reptile
 face
 plant
 vegetable
+fruit
 tool
-man-made object

@@ -4,6 +4,16 @@ Spring 2021
 G.Brookshire@bham.ac.uk
 """
 
+"""
+TODO
+- What should we use as probe words?
+- Update instructions
+- Check for old/unused settings
+- Sometimes a set of stimuli is not shown after 2 probe trials in a row
+    - The trial after the first probe doesn't appear?
+- Fix the problem that causes occasional crashing w/ duplicated stims
+"""
+
 # Standard libraries
 import os
 import datetime
@@ -46,17 +56,11 @@ KEYS = {'break': 'escape',
         'yes': '7',
         'no': '8'}
 
-#COLORS = {'cs': 'rgb255', # ColorSpace
-#          'white': [255, 255, 255],
-#          'grey': [128, 128, 128],
-#          'black': [0, 0, 0],
-#          'pink': [225, 10, 130],
-#          'blue': [35, 170, 230]}
-
 COLORS = {'cs': 'rgb', # ColorSpace
           'white': [1.0, 1.0, 1.0],
           'grey': [0.0, 0.0, 0.0],
-          'black': [-1.0, -1.0, -1.0]}
+          'black': [-1.0, -1.0, -1.0],
+          'pink': [1.0, -0.9, -0.1]}
 
 if FULL_SCREEN:
     SCREEN_RES = [1920, 1080] # Full res on the Propixx projector
@@ -69,11 +73,12 @@ STIM_SIZE = int(dc.deg2pix(STIM_SIZE_DEG)) # Size in pixels
 STIM_DIST = int(dc.deg2pix(STIM_DIST_DEG)) # Distance b/w stimuli
 STIM_DUR = 2.0 # Duration the stimuli stay on screen
 RESPONSE_CUTOFF = 4.0 # Respond within this time
+ITI = 0.2 # Inter-trial interval
 FIX_DUR = (0.5, 1.0) # Hold fixation for X seconds before starting trial
 FIX_THRESH_DEG = 1.0 # Subject must fixate w/in this distance to start trial
 FIX_THRESH = int(dc.deg2pix(FIX_THRESH_DEG))
+P_PROBE = 0.5 # Probability of getting a word probe on this trial
 N_REPS_PER_LOC = 2 # How many times each object appears in each location
-N_TRIALS = 10 # Should be about 45-50 min
 BLOCK_LENGTH = 25 # Number of trials per block
 
 END_EXPERIMENT = 9999 # Numeric tag signals stopping expt early
@@ -176,9 +181,9 @@ text_stim = visual.TextStim(pos=win_center, text='hello', # For instructions
 fixation = visual.Circle(radius=10, pos=win_center, **circle_params)
 drift_fixation = visual.Circle(radius=5, pos=win_center, **circle_params)
 
-## For marking the gaze position
-#eye_marker = visual.Circle(radius=20, pos=win_center, **circle_params)
-#eye_marker.fillColor = COLORS['pink']
+# For marking the gaze position
+eye_marker = visual.Circle(radius=20, pos=win_center, **circle_params)
+eye_marker.fillColor = COLORS['pink']
 
 # Make psychopy stimulus objects
 pic_stims = {}
@@ -199,23 +204,60 @@ stim_locations = ('left', 'center', 'right')
 
 # Make the lists of stimuli at each location
 # Every image is shown once at each location before repeating the images
-stim_list_by_loc = {}
-for loc in stim_locations:
-    stim_list_by_loc[loc] = [] # Start an empty list of stimuli at this loc
-    # Make a new shuffled list of all stims for each repetition
-    for i_rep in range(N_REPS_PER_LOC): 
-        stims = list(stims_to_show.copy())
-        np.random.shuffle(stims)
-        stim_list_by_loc[loc].extend(stims)
-# FIXME make sure the same image is not shown more than once per trial
+# Images are not duplicated within a trial
+stim_list_by_loc = {loc: [] for loc in stim_locations}
+for i_rep in range(N_REPS_PER_LOC):
+    stims_temp = {}
+    for loc in stim_locations:
+        stims_temp[loc] = stims_to_show.copy()
+        np.random.shuffle(stims_temp[loc])
+    # Check for duplicates within a trial
+    i_iter = 0
+    max_iter = 100
+    while True:
+        i_iter += 1
+        if i_iter > max_iter:
+            print("Couldn't make a version without duplicates")
+            import sys; sys.exit()
 
+        stims_by_trial = np.array([stims_temp[loc] for loc in stim_locations])
+        n_unique = np.apply_along_axis(lambda x: len(set(x)),
+                                       axis=0,
+                                       arr=stims_by_trial)
+        dups = np.nonzero(n_unique != len(stim_locations))[0] # inx of dups
+        # Break out of this loop when there are no more duplicates
+        if len(dups) == 0:
+            break
+        else:
+            print('Fixing trials to avoid duplicates')
+            # Shuffle any duplicates
+            for inx in dups:
+                s_l = stims_temp['left']
+                s_c = stims_temp['center']
+                s_r = stims_temp['right']
+                # If left stim is duplicated switch it with the adjacent stim
+                inx_switch_stim ### FIXME Find the next stim where moving this wouldn't make a problem
+                if s_l[inx] in (s_c[inx], s_r[inx]):
+                    s_l[inx - 1], s_l[inx] = s_l[inx], s_l[inx - 1]
+                # Otherwise switch the center stim
+                else:    
+                    s_c[inx - 1], s_c[inx] = s_c[inx], s_c[inx - 1]
+    # Add the stimulus lists to the trial order
+    for loc in stim_locations:
+        stim_list_by_loc[loc].extend(stims_temp[loc])
 
+# Build the list of trial info dictionaries
 choice = np.random.choice
 trial_info = []
 for s_left, s_center, s_right in zip(*stim_list_by_loc.values()):
     d = {}
-    d['stims'] = [s_left, s_center, s_right]
-    d['probe_word'] = choice(probe_words) # FIXME balanced lists of words on 10% of trials
+    d['stim_left'] = s_left
+    d['stim_center'] = s_center
+    d['stim_right'] = s_right
+    if choice([True, False], p=(P_PROBE, 1 - P_PROBE)):
+        d['probe_word'] = choice(probe_words)
+    else:
+        d['probe_word'] = None
     d['fix_dur'] = np.random.uniform(*FIX_DUR)
     trial_info.append(d)
 
@@ -285,6 +327,8 @@ def experimenter_control():
 
 
 def run_trial(trial):
+    print(trial)
+
     reset_port()
     event.clearEvents()
 
@@ -313,40 +357,46 @@ def run_trial(trial):
             win.flip()
 
     # Present the stimuli
-    locations = [-1, 0, 1]
-    for i_stim, loc in enumerate(locations):
-        stim = pic_stims[trial['stims'][i_stim]]
-        print(stim) # Why are the stimuli missing on some trials?
-        stim.pos = (SCREEN_CENTER[0] + (loc * STIM_DIST),
-                    SCREEN_CENTER[1])
-        stim.draw()
+
+    stim_left = pic_stims[trial['stim_left']]
+    stim_left.pos = (SCREEN_CENTER[0] - STIM_DIST, SCREEN_CENTER[1])
+    stim_left.draw()
+
+    stim_center = pic_stims[trial['stim_center']]
+    stim_center.pos = SCREEN_CENTER
+    stim_center.draw()
+
+    stim_right = pic_stims[trial['stim_right']]
+    stim_right.pos = (SCREEN_CENTER[0] + STIM_DIST, SCREEN_CENTER[1])
+    stim_right.draw()
+
     win.flip()
     send_trigger('stimuli')
     reset_port()
     core.wait(STIM_DUR)
+    trials.addData('stim_onset', core.monotonicClock.getTime())
     
     # Show the probe
-    if trial['probe_word'] is None:
-        win.flip(clearBuffer=True)
-    else:
+    if trial['probe_word'] != None:
         show_text(trial['probe_word'])
         send_trigger('probe')
-
-    RT_CLOCK.reset()
-    reset_port()
-
-    # Wait for a key press
-    event.clearEvents()
-    r = event.waitKeys(maxWait=RESPONSE_CUTOFF,
-                       keyList=[KEYS['yes'], KEYS['no']],
-                       timeStamped=RT_CLOCK)
-    if r is not None:
-        send_trigger('response')
+        RT_CLOCK.reset()
         reset_port()
-        keypress, rt = r[0]
-        trials.addData('resp', keypress)
-        trials.addData('rt', rt)
 
+        # Wait for a key press
+        event.clearEvents()
+        r = event.waitKeys(maxWait=RESPONSE_CUTOFF,
+                           keyList=[KEYS['yes'], KEYS['no']],
+                           timeStamped=RT_CLOCK)
+        if r is not None:
+            send_trigger('response')
+            reset_port()
+            keypress, rt = r[0]
+            trials.addData('resp', keypress)
+            trials.addData('rt', rt)
+
+    win.flip(clearBuffer=True)
+    core.wait(ITI)
 
     return experimenter_control()
 
