@@ -6,3 +6,4 @@ plant
 vegetable
 fruit
 tool
+building
