@@ -8,10 +8,6 @@ G.Brookshire@bham.ac.uk
 TODO
 - What should we use as probe words?
 - Update instructions
-- Check for old/unused settings
-- Sometimes a set of stimuli is not shown after 2 probe trials in a row
-    - The trial after the first probe doesn't appear?
-- Fix the problem that causes occasional crashing w/ duplicated stims
 """
 
 # Standard libraries
@@ -65,8 +61,9 @@ COLORS = {'cs': 'rgb', # ColorSpace
 if FULL_SCREEN:
     SCREEN_RES = [1920, 1080] # Full res on the Propixx projector
 else:
-    SCREEN_RES = [1000, 1000]
-SCREEN_CENTER = [0, 0] #[int(z / 2) for z in SCREEN_RES]
+    SCREEN_RES = [1000, 1000] # Small display for easier testing
+
+SCREEN_CENTER = [0, 0]
 STIM_SIZE_DEG = 2.0 # Stim size in visual degrees
 STIM_DIST_DEG = 5.0 # Distance b/w centers of stimuli in vis deg
 STIM_SIZE = int(dc.deg2pix(STIM_SIZE_DEG)) # Size in pixels
@@ -235,13 +232,38 @@ for i_rep in range(N_REPS_PER_LOC):
                 s_l = stims_temp['left']
                 s_c = stims_temp['center']
                 s_r = stims_temp['right']
-                # If left stim is duplicated switch it with the adjacent stim
-                inx_switch_stim ### FIXME Find the next stim where moving this wouldn't make a problem
-                if s_l[inx] in (s_c[inx], s_r[inx]):
-                    s_l[inx - 1], s_l[inx] = s_l[inx], s_l[inx - 1]
-                # Otherwise switch the center stim
-                else:    
-                    s_c[inx - 1], s_c[inx] = s_c[inx], s_c[inx - 1]
+                # Decide which stimulus to switch
+                # Switch the left stim if it's duplicated in the others
+                if stims_temp['left'][inx] in (stims_temp['center'][inx],
+                                               stims_temp['right'][inx]):
+                    s_switch = stims_temp['left']
+                    s_keep_1 = stims_temp['center']
+                    s_keep_2 = stims_temp['right']
+                # Switch the center stim if it's the same as the right stim
+                else:
+                    s_switch = stims_temp['center']
+                    s_keep_1 = stims_temp['left']
+                    s_keep_2 = stims_temp['right']
+                # Find the closest place where switching the stims won't
+                # introduce another trial with duplicated stimuli
+                switch_inx = inx 
+                while True:
+                    switch_inx += 1
+                    # Wrap the indices when you get to the end of the list
+                    switch_inx = switch_inx % len(stims_to_show)
+                    # Does switching here introduce a duplicate?
+                    if s_switch[inx] in (s_keep_1[switch_inx],
+                                         s_keep_2[switch_inx]):
+                        continue
+                    if s_switch[switch_inx] in (s_keep_1[inx],
+                                                s_keep_2[inx]):
+                        continue
+                    # If there's no dup here, break the loop and keep this index
+                    break
+                # Switch the stimuli
+                s_switch[inx], s_switch[switch_inx] = \
+                        s_switch[switch_inx], s_switch[inx]
+
     # Add the stimulus lists to the trial order
     for loc in stim_locations:
         stim_list_by_loc[loc].extend(stims_temp[loc])
@@ -327,8 +349,6 @@ def experimenter_control():
 
 
 def run_trial(trial):
-    print(trial)
-
     reset_port()
     event.clearEvents()
 
@@ -372,12 +392,12 @@ def run_trial(trial):
 
     win.flip()
     send_trigger('stimuli')
+    trials.addData('stim_onset', core.monotonicClock.getTime())
     reset_port()
     core.wait(STIM_DUR)
-    trials.addData('stim_onset', core.monotonicClock.getTime())
     
     # Show the probe
-    if trial['probe_word'] != None:
+    if trial['probe_word'] is not None:
         show_text(trial['probe_word'])
         send_trigger('probe')
         RT_CLOCK.reset()
@@ -402,7 +422,7 @@ def run_trial(trial):
 
 
 def eye_pos_check():
-    """ Check whether the stimulus is following the eye position
+    """ Check whether the dot is following the eye position
     """
     event.clearEvents()
     while True:
