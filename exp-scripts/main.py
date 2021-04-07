@@ -156,8 +156,13 @@ else: # Dummy functions for dry-runs on my office desktop
 
 win_center = (0, 0)
 
+mon = monitors.Monitor('propixxMonitor',
+                       width=100, # in cm
+                       distance=100) # in cm
+mon.setSizePix(SCREEN_RES)
+
 win = visual.Window(SCREEN_RES,
-                    monitor='propixxMonitor',
+                    monitor=mon,
                     fullscr=FULL_SCREEN,
                     color=COLORS['grey'], colorSpace=COLORS['cs'],
                     allowGUI=False)
