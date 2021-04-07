@@ -1,5 +1,5 @@
 In this study, you'll see three images appear together on the screen for a couple seconds.
 Your job is to keep track of what images appear on the screen. Sometimes, we'll ask you a question about what kind of image you just saw.
-For example, after seeing the images, you might see a screen that says "Hand (y/n)". Press "Y" if there was a picture of a hand on the prior screen, or "N" if there was not.
+For example, immediately after seeing the images, you might see a screen that says "Hand (y/n)". Press "Y" if there was a picture of a hand on the prior screen, or "N" if there was not.
 Do you have any questions before beginning?
 Get ready to start!

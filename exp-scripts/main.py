@@ -8,6 +8,20 @@ G.Brookshire@bham.ac.uk
 TODO
 - What should we use as probe words?
 - Update instructions
+- Decide how many trials we'll need in the real experiment
+"""
+
+"""
+Things to test
+- Distance from participant's eyes to screen
+- Width of the screen
+- Trial doesn't start until people fixate the dot
+- Button presses
+- Stimulus sizes
+- Triggers
+    - MEG recording machine
+    - Eye-tracking
+- Re-calibrate eye-tracking
 """
 
 # Standard libraries
