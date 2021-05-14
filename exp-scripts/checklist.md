@@ -111,7 +111,7 @@ title: MEG checklist
 ```
 cd /data/neuro-data/<PROJECT_DIR>/
 scp -r <SUBJECT_NAME> \
-    brookshg@bluebear.bham.ac.uk:/rds/projects/b/brookshg-saccades-attention/data/raw/
+    brookshg@bluebear.bham.ac.uk:/rds/projects/b/brookshg-saccades-attention/saccades-attention2/data/raw/
 ```
 - Bluebear project name: saccades-attention
 
