@@ -46,9 +46,9 @@ import eye_wrapper
 ############
 
 # Set to False for testing without triggers, eye-tracker, etc
-IN_MEG_LAB = False
+IN_MEG_LAB = True
 
-FULL_SCREEN = False
+FULL_SCREEN = True
 
 START_TIME = datetime.datetime.now().strftime('%Y-%m-%d-%H%M')
 RT_CLOCK = core.Clock() # for measuring response times
@@ -89,7 +89,7 @@ FIX_DUR = (0.5, 1.0) # Hold fixation for X seconds before starting trial
 FIX_THRESH_DEG = 1.0 # Subject must fixate w/in this distance to start trial
 FIX_THRESH = int(dc.deg2pix(FIX_THRESH_DEG))
 P_PROBE = 0.5 # Probability of getting a word probe on this trial
-N_REPS_PER_LOC = 2 # How many times each object appears in each location
+N_REPS_PER_LOC = 15 # How many times each object appears in each location
 BLOCK_LENGTH = 25 # Number of trials per block
 
 END_EXPERIMENT = 9999 # Numeric tag signals stopping expt early
@@ -149,7 +149,7 @@ if IN_MEG_LAB:
         core.wait(wait_time)
 
 else: # Dummy functions for dry-runs on my office desktop
-    refresh_rate = 60.0
+    refresh_rate = 120.0
     el = eye_wrapper.DummyEyelink()
 
     def eye_pos():
@@ -171,8 +171,8 @@ else: # Dummy functions for dry-runs on my office desktop
 win_center = (0, 0)
 
 mon = monitors.Monitor('propixxMonitor',
-                       width=100, # in cm
-                       distance=100) # in cm
+                       width=dc.screen_width, # in cm
+                       distance=dc.eye_screen) # in cm
 mon.setSizePix(SCREEN_RES)
 
 win = visual.Window(SCREEN_RES,
