@@ -26,7 +26,7 @@ subject_info = pd.read_csv(data_dir + 'subject_info.csv',
 def identify_artifacts(n):
     """ Identify artifacts for a given subject number.
     """
-    subj_fname = subject_info['meg_dir'][n]
+    subj_fname = str(subject_info['meg_dir'][n])
     meg_fname = subject_info['meg_fname'][n]
 
     # Read in the data
@@ -42,7 +42,7 @@ def identify_artifacts(n):
 
     trig_stim = expt_info['event_dict']['stimuli']
     t_stim = meg_events[meg_events[:, 2] == trig_stim, 0]
-    t_start = t_stim - (expt_info['stim_dur'] * raw.info['sfreq'])
+    t_start = t_stim - (expt_info['pre_stim_dur'] * raw.info['sfreq'])
     t_end = t_stim + (expt_info['stim_dur'] * raw.info['sfreq'])
     annot_onset = np.hstack([raw.first_samp, t_end])
     annot_offset = np.hstack([t_start, raw.last_samp])
