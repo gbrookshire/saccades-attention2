@@ -66,6 +66,8 @@ def identify_artifacts(n):
             annotations = mne.read_annotations(annot_fname)
         elif resp in 'Yy':
             print('Creating new artifact annotations')
+            annotations = identify_manual(raw)
+            annotations.save(annot_fname)
         else:
             print(f'Option not recognized -- exiting')
             return None
