@@ -14,8 +14,9 @@ import mne
 
 expt_info = json.load(open('expt_info.json'))
 
-if socket.gethostname() == 'colles-d164179':
-    data_dir = expt_info['data_dir']['external']
+hostname = socket.gethostname().lower()
+if hostname.startswith('colles'):
+    data_dir = expt_info['data_dir'][hostname]
 else:
     data_dir = expt_info['data_dir']['standard']
 
