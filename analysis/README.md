@@ -16,4 +16,8 @@ To convert the eye-tracker data to a useable ASCII format, run the file `eyelink
 
 ## Identifying artifacts
 
-Identify artifacts for each subject by running `python artifacts.py` in the terminal, and then entering the subject snumber from `subject_info.csv`.
+Identify artifacts for each subject by running `python artifacts.py` in the terminal, and then entering the subject snumber from `subject_info.csv`. Alternatively, you can `import artifacts` in python, and then run `artifacts.identify_artifacts(n)`, where `n` is the subject number.
+
+Out-of-trial is highlighted in red
+X out of the artifact browser window
+ICA: click on trace to mark as bad
