@@ -10,16 +10,18 @@ import mne
 import eyelink_parser
 
 import sys
-sys.path.append('../exp_scripts')
+sys.path.append('../exp-scripts')
 import dist_convert as dc
 
 
 expt_info = json.load(open('expt_info.json'))
 
-if socket.gethostname() == 'colles-d164179':
-    data_dir = expt_info['data_dir']['external']
+hostname = socket.gethostname().lower()
+if hostname.startswith('colles'):
+    data_dir = expt_info['data_dir'][hostname]
 else:
     data_dir = expt_info['data_dir']['standard']
+
 
 # Get the locations of the stimuli
 win_center = (0, 0)
@@ -163,6 +165,7 @@ def get_fixation_events(meg_events, eye_data, behav_data):
         else:
             trig = 'ERROR'
         evt_samp = np.array(fix[event_type])
+        evt_samp = evt_samp[~np.isnan(evt_samp)]
         evt_samp = np.reshape(evt_samp, [-1, 1])
         evt_samp = np.int64(evt_samp)
         evt_dur = np.zeros(evt_samp.shape, dtype=int)
