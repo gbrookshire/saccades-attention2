@@ -2,7 +2,7 @@
 
 How does the brain gather information before an eye movement? (Take 2)
 
-This repository holds the code used for an experiment I did at the University of Birmingham in Ole Jensen's lab. We didn't end up publishing anything from this study.
+This repository holds the code used for an experiment I did at the University of Birmingham in Ole Jensen's lab. We didn't end up publishing anything from this study. [This presentation](https://docs.google.com/presentation/d/14qMf7AfUc3TXrXrt1mGWVeFTmpmtddrTINcfc-Kj5Gc/edit?usp=sharing) describes some of the results.
 
 
 # Design
